@@ -1,6 +1,8 @@
 package com.crossoverjie.cim.client.service.impl;
 
 import com.crossoverjie.cim.client.client.CIMClient;
+import com.crossoverjie.cim.client.po.ClientTimeInfo;
+import com.crossoverjie.cim.client.service.impl.system.IIdleClientService;
 import com.crossoverjie.cim.client.thread.ContextHolder;
 import com.crossoverjie.cim.common.kit.HeartBeatHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 /**
  * Function:
@@ -23,6 +27,7 @@ public class ClientHeartBeatHandlerImpl implements HeartBeatHandler {
 
     @Autowired
     private CIMClient cimClient;
+
 
 
     @Override

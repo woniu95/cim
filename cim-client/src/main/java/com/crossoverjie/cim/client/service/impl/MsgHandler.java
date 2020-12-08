@@ -121,9 +121,9 @@ public class MsgHandler implements MsgHandle {
     public boolean checkMsg(String msg) {
         if (StringUtil.isEmpty(msg)) {
             LOGGER.warn("不能发送空消息！");
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     @Override

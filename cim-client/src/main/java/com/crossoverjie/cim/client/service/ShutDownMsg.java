@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ShutDownMsg {
+
     private boolean isCommand ;
 
     /**
@@ -22,5 +23,9 @@ public class ShutDownMsg {
 
     public boolean checkStatus(){
         return isCommand ;
+    }
+
+    public void reset(boolean isCommand){
+        this.isCommand = isCommand;
     }
 }

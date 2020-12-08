@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,7 +60,7 @@ public class AsyncMsgLogger implements MsgLogger {
 
         @Override
         public void run() {
-            while (started) {
+            while (started && !isInterrupted()) {
                 try {
                     String msg = blockingQueue.take();
                     writeLog(msg);
@@ -105,7 +106,9 @@ public class AsyncMsgLogger implements MsgLogger {
         if (started) {
             return;
         }
-
+        if(Thread.State.TERMINATED.equals(worker.getState())){
+            worker = new Worker();
+        }
         worker.setDaemon(true);
         worker.setName("AsyncMsgLogger-Worker");
         started = true;

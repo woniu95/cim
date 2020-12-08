@@ -27,4 +27,6 @@ public interface MsgLogger {
      * @return
      */
     String query(String key) ;
+
+
 }

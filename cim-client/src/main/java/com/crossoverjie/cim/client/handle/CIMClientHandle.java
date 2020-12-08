@@ -1,9 +1,11 @@
 package com.crossoverjie.cim.client.handle;
 
+import com.crossoverjie.cim.client.po.ClientTimeInfo;
 import com.crossoverjie.cim.client.service.EchoService;
 import com.crossoverjie.cim.client.service.ReConnectManager;
 import com.crossoverjie.cim.client.service.ShutDownMsg;
 import com.crossoverjie.cim.client.service.impl.EchoServiceImpl;
+import com.crossoverjie.cim.client.service.impl.system.IIdleClientService;
 import com.crossoverjie.cim.client.util.SpringBeanFactory;
 import com.crossoverjie.cim.common.constant.Constants;
 import com.crossoverjie.cim.common.protocol.CIMRequestProto;
@@ -18,7 +20,9 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -46,6 +50,10 @@ public class CIMClientHandle extends SimpleChannelInboundHandler<CIMResponseProt
 
     private EchoService echoService ;
 
+    private ClientTimeInfo clientTimeInfo;
+
+    private IIdleClientService idleClientReleaseService;
+
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
@@ -54,6 +62,7 @@ public class CIMClientHandle extends SimpleChannelInboundHandler<CIMResponseProt
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt ;
 
             if (idleStateEvent.state() == IdleState.WRITER_IDLE){
+
                 CIMRequestProto.CIMReqProtocol heartBeat = SpringBeanFactory.getBean("heartBeat",
                         CIMRequestProto.CIMReqProtocol.class);
                 ctx.writeAndFlush(heartBeat).addListeners((ChannelFutureListener) future -> {
@@ -62,6 +71,23 @@ public class CIMClientHandle extends SimpleChannelInboundHandler<CIMResponseProt
                         future.channel().close();
                     }
                 }) ;
+            }
+
+
+            if(clientTimeInfo == null || idleClientReleaseService == null){
+                clientTimeInfo = SpringBeanFactory.getBean(ClientTimeInfo.class);
+                idleClientReleaseService = SpringBeanFactory.getBean(IIdleClientService.class);
+            }
+
+            //TODO  改为可配置 用户多久未操作释放连接时间
+
+            //用户长时间不用断开连接
+            Date now = new Date();
+            if(clientTimeInfo.isAlive() && now.getTime()- clientTimeInfo.getLastOperateTime().getTime() >1*60*1000
+                    && now.getTime()-clientTimeInfo.getLastReceiveMsgTime().getTime()>1*60*1000){
+
+                idleClientReleaseService.release();
+                return;
             }
 
         }
@@ -82,7 +108,7 @@ public class CIMClientHandle extends SimpleChannelInboundHandler<CIMResponseProt
             shutDownMsg = SpringBeanFactory.getBean(ShutDownMsg.class) ;
         }
 
-        //用户主动退出，不执行重连逻辑
+        //用户退出，不执行重连逻辑
         if (shutDownMsg.checkStatus()){
             return;
         }
@@ -115,6 +141,8 @@ public class CIMClientHandle extends SimpleChannelInboundHandler<CIMResponseProt
             //将消息中的 emoji 表情格式化为 Unicode 编码以便在终端可以显示
             String response = EmojiParser.parseToUnicode(msg.getResMsg());
             echoService.echo(response);
+
+            clientTimeInfo.setLastReceiveMsgTime(new Date());
         }
 
 

@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component;
 @Component
 public final class SpringBeanFactory implements ApplicationContextAware{
 	private static ApplicationContext context;
-	
+
+	public static void replaceBean(){
+
+	}
 	public static <T> T getBean(Class<T> c){
 		return context.getBean(c);
 	}

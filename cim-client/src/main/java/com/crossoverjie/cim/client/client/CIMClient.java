@@ -2,12 +2,14 @@ package com.crossoverjie.cim.client.client;
 
 import com.crossoverjie.cim.client.config.AppConfiguration;
 import com.crossoverjie.cim.client.init.CIMClientHandleInitializer;
+import com.crossoverjie.cim.client.po.ClientTimeInfo;
 import com.crossoverjie.cim.client.service.EchoService;
 import com.crossoverjie.cim.client.service.MsgHandle;
 import com.crossoverjie.cim.client.service.ReConnectManager;
 import com.crossoverjie.cim.client.service.RouteRequest;
 import com.crossoverjie.cim.client.service.impl.ClientInfo;
 import com.crossoverjie.cim.client.thread.ContextHolder;
+import com.crossoverjie.cim.client.util.SpringBeanFactory;
 import com.crossoverjie.cim.client.vo.req.GoogleProtocolVO;
 import com.crossoverjie.cim.client.vo.req.LoginReqVO;
 import com.crossoverjie.cim.client.vo.res.CIMServerResVO;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.Date;
 
 /**
  * Function:
@@ -71,13 +74,15 @@ public class CIMClient {
     @Autowired
     private ReConnectManager reConnectManager ;
 
+    @Autowired
+    private ClientTimeInfo clientTimeInfo;
     /**
      * 重试次数
      */
     private int errorCount;
 
     @PostConstruct
-    public void start() throws Exception {
+    public void start()  {
 
         //登录 + 获取可以使用的服务器 ip+port
         CIMServerResVO.ServerInfo cimServer = userLogin();
@@ -88,6 +93,9 @@ public class CIMClient {
         //向服务端注册
         loginCIMServer();
 
+        clientTimeInfo.setAlive(true);
+        clientTimeInfo.setLastOperateTime(new Date());
+        clientTimeInfo.setLastReceiveMsgTime(new Date());
 
     }
 
